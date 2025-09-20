@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>音あてゲーム (Web Audio API 版)</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      margin-top: 50px;
+    }
+
+    button {
+      font-size: 20px;
+      padding: 10px 20px;
+      margin: 10px;
+    }
+
+    #result {
+      font-size: 100px;
+      margin-top: 50px;
+    }
+
+    .circle {
+      color: red;
+    }
+
+    .question {
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>なんかいなったかな？</h1>
+
+  <button onclick="playProblem()">もんだい</button>
+  <button onclick="replaySound()">もういちど</button>
+
+  <div>
+    <p>いくつ鳴った？</p>
+    <div id="choices"></div>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    let correctCount = 0;
+    let audioCtx;
+    let mainBuffer = null;
+    let correctBuffer = null;
+
+    // 初期化 (ユーザー操作後に呼び出し)
+    async function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // 音声ファイルを読み込んでバッファに変換
+        mainBuffer = await loadAudioBuffer("main-sound.mp3");
+        correctBuffer = await loadAudioBuffer("correct.mp3");
+      }
+    }
+
+    // 音声ファイルを ArrayBuffer → AudioBuffer に変換
+    async function loadAudioBuffer(url) {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      return await audioCtx.decodeAudioData(arrayBuffer);
+    }
+
+    // バッファを再生
+    function playBuffer(buffer, when = 0) {
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start(audioCtx.currentTime + when);
+    }
+
+    // 音を指定回数再生
+    function playSoundRepeated(count) {
+      if (!mainBuffer) return;
+      for (let i = 0; i < count; i++) {
+        playBuffer(mainBuffer, i * 0.5); // 0.5秒間隔で再生
+      }
+    }
+
+    // 問題を出題
+    async function playProblem() {
+      await initAudio();
+      correctCount = Math.floor(Math.random() * 10) + 1;
+      playSoundRepeated(correctCount);
+      document.getElementById("result").textContent = "";
+    }
+
+    // 音を再再生
+    function replaySound() {
+      if (correctCount > 0) {
+        playSoundRepeated(correctCount);
+      }
+    }
+
+    // 回答をチェック
+    function checkAnswer(selected) {
+      const result = document.getElementById("result");
+      if (selected === correctCount) {
+        result.textContent = "◯";
+        result.className = "circle";
+        if (correctBuffer) {
+          playBuffer(correctBuffer);
+        }
+      } else {
+        result.textContent = "？";
+        result.className = "question";
+      }
+    }
+
+    // 選択肢ボタンを生成
+    function createChoiceButtons() {
+      const choicesDiv = document.getElementById("choices");
+      choicesDiv.innerHTML = "";
+      for (let i = 1; i <= 10; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.onclick = () => checkAnswer(i);
+        choicesDiv.appendChild(btn);
+      }
+    }
+
+    // 初期化
+    window.onload = createChoiceButtons;
+  </script>
+</body>
+</html>
