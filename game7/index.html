@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>どちらゲーム</title>
+  <style>
+    body {
+      font-family: "UD デジタル 教科書体 N-R", "Yu Kyokasho", "ヒラギノ明朝 ProN", sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .button, .option {
+      font-size: 2rem;
+      padding: 10px 20px;
+      margin: 10px;
+      border-radius: 12px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    .option {
+      display: inline-block;
+      width: 80px;
+    }
+
+    #question {
+      margin: 30px 0;
+      font-size: 2rem;
+    }
+
+    #feedback {
+      font-size: 3rem;
+      margin-top: 20px;
+    }
+
+    #score {
+      font-size: 2rem;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 最初の選択画面 -->
+  <div id="mode-select-screen">
+    <h2>ちいさい？おおきい？</h2>
+    <button class="button" onclick="selectGameMode('small')">ちいさい</button>
+    <button class="button" onclick="selectGameMode('big')">おおきい</button>
+  </div>
+
+  <!-- 出題数選択 -->
+  <div id="count-screen" class="hidden">
+    <h2>すうじのかずは？</h2>
+    <button class="button" onclick="selectCount(2)">２</button>
+    <button class="button" onclick="selectCount(3)">３</button>
+  </div>
+
+  <!-- 範囲選択 -->
+  <div id="range-screen" class="hidden">
+    <h2>どのすうじにする？</h2>
+    <button class="button" onclick="selectRange(10)">１０</button>
+    <button class="button" onclick="selectRange(20)">２０</button>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game-screen" class="hidden">
+    <div id="question">ちいさいのは　どれ？</div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="result-screen" class="hidden">
+    <h2>がんばったね！</h2>
+    <div id="score"></div>
+  </div>
+
+  <audio id="correctSound" src="sounds/pinpon.mp3"></audio>
+
+  <script>
+    let gameType = "small"; // 'small' か 'big'
+    let choiceCount = 2;
+    let maxNumber = 10;
+    let currentQuestion = 0;
+    let score = 0;
+    const totalQuestions = 10;
+
+    const modeSelectScreen = document.getElementById("mode-select-screen");
+    const countScreen = document.getElementById("count-screen");
+    const rangeScreen = document.getElementById("range-screen");
+    const gameScreen = document.getElementById("game-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    const questionDiv = document.getElementById("question");
+    const optionsDiv = document.getElementById("options");
+    const feedbackDiv = document.getElementById("feedback");
+    const scoreDiv = document.getElementById("score");
+    const correctSound = document.getElementById("correctSound");
+
+    function selectGameMode(mode) {
+      gameType = mode;
+      modeSelectScreen.classList.add("hidden");
+      countScreen.classList.remove("hidden");
+    }
+
+    function selectCount(num) {
+      choiceCount = num;
+      countScreen.classList.add("hidden");
+      rangeScreen.classList.remove("hidden");
+    }
+
+    function selectRange(max) {
+      maxNumber = max;
+      rangeScreen.classList.add("hidden");
+      gameScreen.classList.remove("hidden");
+      startGame();
+    }
+
+    function startGame() {
+      currentQuestion = 0;
+      score = 0;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      feedbackDiv.textContent = "";
+      optionsDiv.innerHTML = "";
+
+      questionDiv.textContent = (gameType === 'small') ? "ちいさいのは　どれ？" : "おおきいのは　どれ？";
+
+      let numbers = [];
+      while (numbers.length < choiceCount) {
+        const rand = Math.floor(Math.random() * maxNumber) + 1;
+        if (!numbers.includes(rand)) numbers.push(rand);
+      }
+
+      const correct = (gameType === 'small') ? Math.min(...numbers) : Math.max(...numbers);
+
+      numbers.forEach(num => {
+        const btn = document.createElement("button");
+        btn.textContent = num;
+        btn.className = "option";
+        btn.onclick = () => handleAnswer(num === correct);
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(isCorrect) {
+      if (isCorrect) {
+        correctSound.currentTime = 0;
+        correctSound.play();
+        feedbackDiv.textContent = "〇";
+        feedbackDiv.style.color = "red";
+        score += 10;
+      } else {
+        feedbackDiv.textContent = "？";
+        feedbackDiv.style.color = "black";
+      }
+
+      setTimeout(() => {
+        currentQuestion++;
+        if (currentQuestion < totalQuestions) {
+          showQuestion();
+        } else {
+          showResult();
+        }
+      }, 1000);
+    }
+
+    function showResult() {
+      gameScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+      scoreDiv.textContent = `点数：${score} 点`;
+
+      setTimeout(() => {
+        resultScreen.classList.add("hidden");
+        modeSelectScreen.classList.remove("hidden");
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
