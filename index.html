@@ -4,38 +4,86 @@
   <meta charset="UTF-8">
   <title>ゲームメニュー</title>
   <style>
-    body { font-family: 'Noto Sans JP', sans-serif; text-align: center; padding: 50px; }
-    h1 { margin-bottom: 30px; }
-    .menu { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-    a { display: block; padding: 15px 30px; font-size: 1.5rem; text-decoration: none; background: white; border: 2px solid #333; border-radius: 10px; width: 250px; transition: 0.3s; }
-    a:hover { background: #ddd; }
+    body {
+      font-family: 'Comic Sans MS', 'Noto Sans JP', sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 40px;
+      color: #ff6f61;
+      text-shadow: 2px 2px 0px #fff;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-top: 30px;
+      color: #2d87f0;
+      text-shadow: 1px 1px 0px #fff;
+    }
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+    }
+    a {
+      display: block;
+      padding: 15px 25px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      text-decoration: none;
+      color: white;
+      border-radius: 15px;
+      width: 280px;
+      transition: 0.3s ease;
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+    }
+
+    /* ボタンをカラフルに */
+    a:nth-child(odd) {
+      background: #ff9a9e;
+    }
+    a:nth-child(even) {
+      background: #84fab0;
+    }
+    a:hover {
+      transform: scale(1.05) rotate(-1deg);
+      box-shadow: 5px 5px 12px rgba(0,0,0,0.3);
+    }
+
+    /* ボタンを少しアニメーションさせる */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    a {
+      animation: bounce 2s infinite;
+    }
   </style>
 </head>
 <body>
-  <h1>ゲームメニュー</h1>
+  <h1>🌟 ゲームメニュー 🌟</h1>
   <div class="menu">
-    <h2>こくご</h2>
+    <h2>✏️ こくご</h2>
     <a href="kokugo/game1/index.html">ひらがな１　みわけ</a>
     <a href="kokugo/game2/index.html">ひらがな２　よみ</a>
-   <a href="kokugo/game3/index.html">ひらがな３　あたまのことば</a>
-       <a href="kokugo/game4/index.html">ひらがな４　おとあて</a>
-     <a href="kokugo/game5/index.html">ひらがな５　２～３もじ</a>
-    <!-- ... game3～game11も同様にリンク -->
+    <a href="kokugo/game3/index.html">ひらがな３　あたまのことば</a>
+    <a href="kokugo/game4/index.html">ひらがな４　おとあて</a>
+    <a href="kokugo/game5/index.html">ひらがな５　２～３もじ</a>
     
-    <h2>さんすう</h2>
+    <h2>🔢 さんすう</h2>
     <a href="sansu/game1/index.html">すうじ１　よみ</a>
     <a href="sansu/game2/index.html">すうじ２　なんかい？</a>
-   <a href="sansu/game3/index.html">すうじ３　ならべよう</a>
-    <a href="sansu/game4/index.html">すうじ４　なんこ？</a> 
-        <a href="sansu/game5/index.html">すうじ５　すうじと〇</a>
-        <a href="sansu/game6/index.html">すうじ６　うごかそう</a>
-        <a href="sansu/game7/index.html">すうじ７　おおきい？ちいさい？</a>
-    <!-- ... game3～game11も同様にリンク -->
+    <a href="sansu/game3/index.html">すうじ３　ならべよう</a>
+    <a href="sansu/game4/index.html">すうじ４　なんこ？</a>
+    <a href="sansu/game5/index.html">すうじ５　すうじと〇</a>
+    <a href="sansu/game6/index.html">すうじ６　うごかそう</a>
+    <a href="sansu/game7/index.html">すうじ７　おおきい？ちいさい？</a>
   </div>
 </body>
 </html>
-
-
 
 
 
