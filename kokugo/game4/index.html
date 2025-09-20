@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ひらがな音あてゲーム</title>
+  <style>
+    body {
+      font-family: 'UD デジタル 教科書体 N-R', 'Yu Kyokasho', sans-serif;
+      text-align: center;
+      background-color: #fff8f0;
+      margin: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      font-size: 1.2rem;
+      margin: 0.4rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      border: none;
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+
+    #controls, #groupButtons {
+      margin-bottom: 1.5rem;
+    }
+
+    #choices {
+      margin-top: 1rem;
+    }
+
+    #result {
+      font-size: 3rem;
+      margin-top: 1rem;
+      height: 100px;
+    }
+
+    #result img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>ひらがな音あてゲーム</h1>
+
+  <div id="groupButtons">
+    <p>モードを選んでね</p>
+    <!-- 既存の行モード -->
+    <button id="mode-all">🎲 全体モード</button>
+    <button data-group="あ">あ行</button>
+    <button data-group="か">か行</button>
+    <button data-group="さ">さ行</button>
+    <button data-group="た">た行</button>
+    <button data-group="な">な行</button>
+    <button data-group="は">は行</button>
+    <button data-group="ま">ま行</button>
+    <button data-group="や">や行</button>
+    <button data-group="ら">ら行</button>
+    <button data-group="わ">わ行</button>
+
+    <!-- 新しいカスタムモード -->
+    <button data-custom="してぃうぃはさん">してぃうぃはさん</button>
+    <button data-custom="ひがしざわゆわ">ひがしざわゆわ</button>
+    <button data-custom="うえはらあさひ">うえはらあさひ</button>
+  </div>
+
+  <div id="controls" class="hidden">
+    <button id="playNew">▶ おとをきく</button>
+    <button id="playAgain">🔁 もういちど</button>
+  </div>
+
+  <div id="choices" class="hidden"></div>
+  <div id="result"></div>
+
+  <audio id="correctSound" src="sounds/pinpon.mp3"></audio>
+
+  <script>
+    const kanaGroups = {
+      "あ": ["あ", "い", "う", "え", "お"],
+      "か": ["か", "き", "く", "け", "こ"],
+      "さ": ["さ", "し", "す", "せ", "そ"],
+      "た": ["た", "ち", "つ", "て", "と"],
+      "な": ["な", "に", "ぬ", "ね", "の"],
+      "は": ["は", "ひ", "ふ", "へ", "ほ"],
+      "ま": ["ま", "み", "む", "め", "も"],
+      "や": ["や", "ゆ", "よ"],
+      "ら": ["ら", "り", "る", "れ", "ろ"],
+      "わ": ["わ", "を", "ん"]
+    };
+
+    const customGroups = {
+      "してぃうぃはさん": ["し", "てぃ", "うぃ", "は", "さ", "ん"],
+      "ひがしざわゆわ": ["ひ", "が", "し", "ざ", "わ", "ゆ"],
+      "うえはらあさひ": ["う", "え", "は", "ら", "あ", "さ", "ひ"]
+    };
+
+    const allKana = Object.values(kanaGroups).flat();
+
+    let currentGroup = [];
+    let remainingGroupKana = [];
+    let correctKana = "";
+    let currentAudio = null;
+    let isAllMode = false;
+
+    const groupButtonsDiv = document.getElementById("groupButtons");
+    const playNewBtn = document.getElementById("playNew");
+    const playAgainBtn = document.getElementById("playAgain");
+    const controlsDiv = document.getElementById("controls");
+    const choicesDiv = document.getElementById("choices");
+    const resultDiv = document.getElementById("result");
+    const correctSound = document.getElementById("correctSound");
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function playKanaAudio(kana) {
+      const audio = new Audio(`sounds/${kana}.mp3`);
+      audio.play();
+      currentAudio = audio;
+    }
+
+    function showGameUI() {
+      groupButtonsDiv.classList.add("hidden");
+      controlsDiv.classList.remove("hidden");
+      choicesDiv.classList.remove("hidden");
+    }
+
+    function showGroupSelection() {
+      groupButtonsDiv.classList.remove("hidden");
+      controlsDiv.classList.add("hidden");
+      choicesDiv.classList.add("hidden");
+      resultDiv.innerHTML = "";
+      isAllMode = false;
+    }
+
+    function loadNextQuestion() {
+      resultDiv.innerHTML = "";
+
+      if (!isAllMode) {
+        if (remainingGroupKana.length === 0) {
+          showGroupSelection();
+          return;
+        }
+        correctKana = remainingGroupKana.pop();
+      } else {
+        correctKana = allKana[Math.floor(Math.random() * allKana.length)];
+      }
+
+      playKanaAudio(correctKana);
+
+      const baseGroup = isAllMode ? allKana : currentGroup;
+      const choices = new Set([correctKana]);
+      while (choices.size < 7 && choices.size < baseGroup.length) {
+        const random = baseGroup[Math.floor(Math.random() * baseGroup.length)];
+        choices.add(random);
+      }
+
+      const shuffled = shuffle([...choices]);
+
+      choicesDiv.innerHTML = "";
+      shuffled.forEach(kana => {
+        const btn = document.createElement("button");
+        btn.textContent = kana;
+        btn.onclick = () => {
+          if (kana === correctKana) {
+            correctSound.play();
+            resultDiv.innerHTML = '<img src="images/hanamaru.png" alt="花丸">';
+            setTimeout(() => loadNextQuestion(), 1500);
+          } else {
+            resultDiv.textContent = "？";
+          }
+        };
+        choicesDiv.appendChild(btn);
+      });
+    }
+
+    document.querySelectorAll('#groupButtons button[data-group]').forEach(btn => {
+      btn.onclick = () => {
+        const groupKey = btn.dataset.group;
+        currentGroup = kanaGroups[groupKey];
+        remainingGroupKana = shuffle([...currentGroup]);
+        isAllMode = false;
+        showGameUI();
+        loadNextQuestion();
+      };
+    });
+
+    document.querySelectorAll('#groupButtons button[data-custom]').forEach(btn => {
+      btn.onclick = () => {
+        const customKey = btn.dataset.custom;
+        currentGroup = customGroups[customKey];
+        remainingGroupKana = shuffle([...currentGroup]);
+        isAllMode = false;
+        showGameUI();
+        loadNextQuestion();
+      };
+    });
+
+    document.getElementById("mode-all").onclick = () => {
+      isAllMode = true;
+      currentGroup = allKana;
+      showGameUI();
+      loadNextQuestion();
+    };
+
+    playNewBtn.onclick = loadNextQuestion;
+    playAgainBtn.onclick = () => {
+      if (correctKana) {
+        playKanaAudio(correctKana);
+      }
+    };
+
+    showGroupSelection();
+  </script>
+</body>
+</html>
