@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>数字に合う画像を選ぶゲーム</title>
+  <style>
+    body {
+      font-family: "UD デジタル 教科書体 N-R", "Yu Kyokasho", "游教科書体", sans-serif;
+      background-color: #fef6f0;
+      text-align: center;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+  #question {
+    font-size: 5rem;
+    margin: 1rem 0;
+  }
+    .screen {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      margin: 1rem;
+      background-color: #fbd1d1;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #f8bcbc;
+    }
+    .images {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .images img {
+      width: 100px;
+      height: 100px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      border-radius: 10px;
+    }
+    .mark {
+      font-size: 4rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen" class="screen active">
+    <h1>数字に合う画像を選ぼう！</h1>
+    <button onclick="startGame(10)">1～10</button>
+    <button onclick="startGame(20)">1～20</button>
+  </div>
+
+  <div id="gameScreen" class="screen">
+    <h1 id="question">?</h1>
+    <div class="images" id="imageContainer"></div>
+    <div class="mark" id="mark"></div>
+  </div>
+
+  <audio id="correctSound" src="sounds/correct.mp3"></audio>
+
+  <script>
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const question = document.getElementById('question');
+    const imageContainer = document.getElementById('imageContainer');
+    const mark = document.getElementById('mark');
+    const correctSound = document.getElementById('correctSound');
+
+    let maxNumber = 10;
+    let currentAnswer = 0;
+    let previousAnswer = 0;
+    let questionCount = 0;
+    const totalQuestions = 10;
+
+    function startGame(max) {
+      maxNumber = max;
+      questionCount = 0;
+      startScreen.classList.remove('active');
+      gameScreen.classList.add('active');
+      showQuestion();
+    }
+
+    function showQuestion() {
+      do {
+        currentAnswer = Math.floor(Math.random() * maxNumber) + 1;
+      } while (currentAnswer === previousAnswer);
+
+      previousAnswer = currentAnswer;
+      question.textContent = currentAnswer;
+      mark.textContent = '';
+      imageContainer.innerHTML = '';
+
+      const choices = generateChoices(currentAnswer, maxNumber);
+      choices.forEach(num => {
+        const img = document.createElement('img');
+        img.src = `images/${num}.png`;
+        img.alt = `画像${num}`;
+        img.onclick = () => checkAnswer(num);
+        imageContainer.appendChild(img);
+      });
+    }
+
+    function generateChoices(correct, max) {
+      const choices = new Set([correct]);
+      while (choices.size < 6) {
+        const n = Math.floor(Math.random() * max) + 1;
+        choices.add(n);
+      }
+      return Array.from(choices).sort(() => Math.random() - 0.5);
+    }
+
+    function checkAnswer(selected) {
+      if (selected === currentAnswer) {
+        correctSound.currentTime = 0;
+        correctSound.play();
+        mark.textContent = '〇';
+        mark.style.color = 'red';
+      } else {
+        mark.textContent = '？';
+        mark.style.color = 'black';
+      }
+
+      questionCount++;
+      setTimeout(() => {
+        if (questionCount >= totalQuestions) {
+          gameScreen.classList.remove('active');
+          startScreen.classList.add('active');
+        } else {
+          showQuestion();
+        }
+      }, 1500);
+    }
+  </script>
+</body>
+</html>

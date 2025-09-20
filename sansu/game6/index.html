@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>かずをうごかそうゲーム</title>
+  <style>
+    body {
+      font-family: "UD デジタル 教科書体 N-R", "YuGothic", sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+      touch-action: none;
+    }
+    #game {
+      margin-top: 20px;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      min-height: 150px;
+      border: 2px dashed #ccc;
+      margin: 20px;
+      padding: 10px;
+      position: relative;
+      touch-action: none;
+    }
+    .item {
+      width: 80px;
+      height: 80px;
+      margin: 5px;
+      cursor: grab;
+      transition: transform 0.3s ease;
+    }
+    .floating {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .result {
+      font-size: 48px;
+      margin-top: 20px;
+    }
+    .correct {
+      color: red;
+    }
+    .wrong {
+      color: black;
+    }
+    #question {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+    #startScreen {
+      display: block;
+    }
+    #gameScreen {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>かずをうごかそうゲーム</h1>
+
+  <div id="startScreen">
+    <label><input type="radio" name="range" value="5" checked> 1〜5</label>
+    <label><input type="radio" name="range" value="10"> 1〜10</label>
+    <button onclick="startGame()">スタート</button>
+  </div>
+
+  <div id="gameScreen">
+    <div id="question"></div>
+    <div class="container" id="dropzone"></div>
+    <div class="container" id="sourcezone"></div>
+    <button onclick="checkAnswer()">できた！</button>
+    <div class="result" id="result"></div>
+    <audio id="correctSound" src="sounds/correct.mp3"></audio>
+  </div>
+
+  <script>
+    let correctCount = 0;
+    let totalItems = 0;
+    let draggedItem = null;
+    let floatingImg = null;
+    let score = 0;
+    let currentQuestion = 0;
+    let maxQuestions = 10;
+    let range = 5;
+
+    function addTouchEvents(img) {
+      img.addEventListener("touchstart", touchStartHandler);
+      img.addEventListener("touchmove", touchMoveHandler, { passive: false });
+      img.addEventListener("touchend", touchEndHandler);
+    }
+
+    function startGame() {
+      document.getElementById("startScreen").style.display = "none";
+      document.getElementById("gameScreen").style.display = "block";
+      range = parseInt(document.querySelector('input[name="range"]:checked').value);
+      score = 0;
+      currentQuestion = 0;
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      if (currentQuestion >= maxQuestions) {
+        showFinalResult();
+        return;
+      }
+
+      correctCount = Math.floor(Math.random() * range) + 1;
+      totalItems = range;
+      document.getElementById("question").textContent = `${correctCount}こ　うごかそう！`;
+      document.getElementById("dropzone").innerHTML = "";
+      document.getElementById("sourcezone").innerHTML = "";
+      document.getElementById("result").textContent = "";
+
+      for (let i = 0; i < totalItems; i++) {
+        const img = document.createElement("img");
+        img.src = "image.png";
+        img.className = "item";
+        img.setAttribute("draggable", true);
+        addTouchEvents(img);
+        img.addEventListener("dragstart", function(ev) {
+          ev.dataTransfer.setData("text", "drag-item");
+          draggedItem = img;
+        });
+        document.getElementById("sourcezone").appendChild(img);
+      }
+    }
+
+    document.getElementById("dropzone").addEventListener("dragover", function(ev) {
+      ev.preventDefault();
+    });
+
+    document.getElementById("dropzone").addEventListener("drop", function(ev) {
+      ev.preventDefault();
+      if (draggedItem) {
+        const clone = draggedItem.cloneNode(true);
+        clone.className = "item";
+        clone.setAttribute("draggable", false);
+        addTouchEvents(clone);
+        document.getElementById("dropzone").appendChild(clone);
+        draggedItem.remove();
+        draggedItem = null;
+      }
+    });
+
+    function touchStartHandler(ev) {
+      ev.preventDefault();
+      const touch = ev.touches[0];
+      floatingImg = ev.target.cloneNode(true);
+      floatingImg.classList.add("floating");
+      floatingImg.style.left = `${touch.clientX - 40}px`;
+      floatingImg.style.top = `${touch.clientY - 40}px`;
+      document.body.appendChild(floatingImg);
+    }
+
+    function touchMoveHandler(ev) {
+      ev.preventDefault();
+      if (floatingImg) {
+        const touch = ev.touches[0];
+        floatingImg.style.left = `${touch.clientX - 40}px`;
+        floatingImg.style.top = `${touch.clientY - 40}px`;
+      }
+    }
+
+    function touchEndHandler(ev) {
+      if (!floatingImg) return;
+
+      const dropzoneRect = document.getElementById("dropzone").getBoundingClientRect();
+      const sourcezone = document.getElementById("sourcezone");
+      const dropzone = document.getElementById("dropzone");
+
+      const x = parseInt(floatingImg.style.left);
+      const y = parseInt(floatingImg.style.top);
+
+      const isInDropzone =
+        x > dropzoneRect.left && x < dropzoneRect.right &&
+        y > dropzoneRect.top && y < dropzoneRect.bottom;
+
+      const newImg = floatingImg.cloneNode(true);
+      newImg.className = "item";
+      newImg.style.position = "static";
+      addTouchEvents(newImg);
+
+      if (isInDropzone) {
+        dropzone.appendChild(newImg);
+      } else {
+        sourcezone.appendChild(newImg);
+      }
+
+      ev.target.remove();
+      floatingImg.remove();
+      floatingImg = null;
+    }
+
+    function checkAnswer() {
+      const userCount = document.getElementById("dropzone").children.length;
+      const result = document.getElementById("result");
+      if (userCount === correctCount) {
+        document.getElementById("correctSound").play();
+        result.textContent = "〇";
+        result.className = "result correct";
+        score += 10;
+      } else {
+        result.textContent = "？";
+        result.className = "result wrong";
+      }
+      currentQuestion++;
+      setTimeout(nextQuestion, 1500);
+    }
+
+    function showFinalResult() {
+      document.getElementById("question").textContent = `${score}てんだ、がんばったね（＾＾）`;
+      document.getElementById("dropzone").innerHTML = "";
+      document.getElementById("sourcezone").innerHTML = "";
+      document.getElementById("result").textContent = "";
+      setTimeout(() => {
+        document.getElementById("startScreen").style.display = "block";
+        document.getElementById("gameScreen").style.display = "none";
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
