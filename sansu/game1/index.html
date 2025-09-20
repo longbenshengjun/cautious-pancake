@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>おとで すうじゲーム</title>
+  <style>
+    body {
+      font-family: "Noto Sans JP", "Kosugi Maru", sans-serif;
+      background-color: #fffaf0;
+      text-align: center;
+      padding: 20px;
+    }
+    .screen {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
+    button {
+      font-size: 1.5em;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 15px;
+      background-color: #ffe4e1;
+      color: #333;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ffd1dc;
+    }
+    .numbers {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    .numbers button {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+      font-size: 1.5em;
+    }
+    #result {
+      font-size: 3em;
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen" class="screen active">
+    <h1>おとで すうじゲーム</h1>
+    <p>えらんでね</p>
+    <button onclick="startGame(10)">1〜10</button>
+    <button onclick="startGame(20)">1〜20</button>
+  </div>
+
+  <div id="quizScreen" class="screen">
+    <h2>なんの すうじ？</h2>
+    <div>
+  <button onclick="nextQuestion()">もんだい</button>
+  <button onclick="playAudio()">もういちど</button>
+    </div>
+    <div class="numbers" id="numberButtons"></div>
+    <div id="result"></div>
+  </div>
+
+  <audio id="audio"></audio>
+  <audio id="correctSound" src="sounds/correct.mp3"></audio>
+
+  <script>
+    let range = 10;
+    let questionCount = 0;
+    let currentAnswer = 0;
+    let questions = [];
+
+    const startScreen = document.getElementById("startScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const numberButtons = document.getElementById("numberButtons");
+    const result = document.getElementById("result");
+    const audio = document.getElementById("audio");
+    const correctSound = document.getElementById("correctSound");
+
+    function startGame(max) {
+      range = max;
+      questionCount = 0;
+      questions = Array.from({length: 10}, () => Math.floor(Math.random() * range) + 1);
+      startScreen.classList.remove("active");
+      quizScreen.classList.add("active");
+      createNumberButtons();
+      nextQuestion();
+    }
+
+    function createNumberButtons() {
+      numberButtons.innerHTML = "";
+      for (let i = 1; i <= range; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.onclick = () => checkAnswer(i);
+        numberButtons.appendChild(btn);
+      }
+    }
+
+    function playAudio() {
+      audio.src = `sounds/${currentAnswer}.mp3`;
+      audio.play();
+    }
+
+    function nextQuestion() {
+      result.textContent = "";
+      if (questionCount >= 10) {
+        quizScreen.classList.remove("active");
+        startScreen.classList.add("active");
+        return;
+      }
+      currentAnswer = questions[questionCount];
+      playAudio();
+      questionCount++;
+    }
+
+    function checkAnswer(selected) {
+      if (selected === currentAnswer) {
+        correctSound.play();
+        result.textContent = "〇";
+      } else {
+        result.textContent = "？";
+      }
+    }
+  </script>
+</body>
+</html>
