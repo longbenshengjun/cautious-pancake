@@ -5,74 +5,71 @@
   <title>ゲームメニュー</title>
   <style>
     body {
-      font-family: 'Comic Sans MS', 'Noto Sans JP', sans-serif;
+      font-family: 'Noto Sans JP', sans-serif;
       text-align: center;
       padding: 40px;
-      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      background: #ffffff;
     }
     h1 {
       font-size: 3rem;
       margin-bottom: 40px;
-      color: #ff6f61;
-      text-shadow: 2px 2px 0px #fff;
+      color: #333;
     }
     h2 {
       font-size: 2rem;
-      margin-top: 30px;
-      color: #2d87f0;
-      text-shadow: 1px 1px 0px #fff;
+      margin: 30px 0 20px;
+      color: #444;
+      border-bottom: 3px solid #ddd;
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 10px;
     }
     .menu {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
       align-items: center;
     }
     a {
       display: block;
-      padding: 15px 25px;
+      padding: 18px 25px;
       font-size: 1.6rem;
       font-weight: bold;
       text-decoration: none;
-      color: white;
-      border-radius: 15px;
-      width: 280px;
-      transition: 0.3s ease;
-      box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+      color: #fff;
+      border-radius: 12px;
+      width: 300px;
+      box-shadow: 2px 4px 6px rgba(0,0,0,0.15);
+      transition: 0.2s;
     }
-
-    /* ボタンをカラフルに */
-    a:nth-child(odd) {
-      background: #ff9a9e;
+    /* 国語（赤系） */
+    .kokugo a {
+      background: #f85a5a;
     }
-    a:nth-child(even) {
-      background: #84fab0;
+    .kokugo a:hover {
+      background: #e14b4b;
     }
-    a:hover {
-      transform: scale(1.05) rotate(-1deg);
-      box-shadow: 5px 5px 12px rgba(0,0,0,0.3);
+    /* 算数（青系） */
+    .sansu a {
+      background: #4a90e2;
     }
-
-    /* ボタンを少しアニメーションさせる */
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-    a {
-      animation: bounce 2s infinite;
+    .sansu a:hover {
+      background: #3578c6;
     }
   </style>
 </head>
 <body>
-  <h1>🌟 ゲームメニュー 🌟</h1>
-  <div class="menu">
+  <h1>ゲームメニュー</h1>
+  <div class="menu kokugo">
     <h2>✏️ こくご</h2>
     <a href="kokugo/game1/index.html">ひらがな１　みわけ</a>
     <a href="kokugo/game2/index.html">ひらがな２　よみ</a>
     <a href="kokugo/game3/index.html">ひらがな３　あたまのことば</a>
     <a href="kokugo/game4/index.html">ひらがな４　おとあて</a>
     <a href="kokugo/game5/index.html">ひらがな５　２～３もじ</a>
-    
+  </div>
+  
+  <div class="menu sansu">
     <h2>🔢 さんすう</h2>
     <a href="sansu/game1/index.html">すうじ１　よみ</a>
     <a href="sansu/game2/index.html">すうじ２　なんかい？</a>
@@ -84,6 +81,3 @@
   </div>
 </body>
 </html>
-
-
-
