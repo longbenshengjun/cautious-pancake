@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>なんばんめ？</title>
+  <style>
+    body {
+      font-family: "UD デジタル 教科書体 N-R", "Yu Kyokasho", sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+    }
+    #start, #game, #result {
+      display: none;
+    }
+    .btn {
+      font-size: 2rem;
+      margin: 1rem;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 10px;
+      background-color: #87cefa;
+      cursor: pointer;
+    }
+    #questionArea {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    #imageContainer {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    #imageContainer.vertical {
+      flex-direction: column;
+    }
+    .image-box img {
+      width: 100px;
+      height: 100px;
+      border: 4px solid transparent;
+    }
+    .side-options {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .option {
+      font-size: 1.5rem;
+      padding: 0.5rem 1rem;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background-color: #fff;
+      cursor: pointer;
+    }
+    #feedback {
+      font-size: 2rem;
+      color: red;
+      margin: 20px;
+    }
+    #scoreDisplay {
+      font-size: 2rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="start">
+    <h1>どれにする？</h1>
+    <button class="btn" onclick="startGame('left')">ひだり</button>
+    <button class="btn" onclick="startGame('right')">みぎ</button>
+    <button class="btn" onclick="startGame('top')">うえ</button>
+    <button class="btn" onclick="startGame('bottom')">した</button>
+    <button class="btn" onclick="startGame('front')">まえ</button>
+    <button class="btn" onclick="startGame('back')">うしろ</button>
+    <button class="btn" onclick="startGame('all')">ぜんぶ</button>
+  </div>
+
+  <div id="game">
+    <h2 id="question"></h2>
+    <div id="questionArea">
+      <div id="imageContainer"></div>
+      <div id="choices" class="side-options"></div>
+    </div>
+    <div id="feedback"></div>
+  </div>
+
+  <div id="result">
+    <h2>けっか</h2>
+    <div id="scoreDisplay"></div>
+  </div>
+
+  <audio id="correctSound" src="sounds/pinpon.mp3"></audio>
+
+  <script>
+    const startScreen = document.getElementById("start");
+    const gameScreen = document.getElementById("game");
+    const resultScreen = document.getElementById("result");
+    const questionEl = document.getElementById("question");
+    const imageContainer = document.getElementById("imageContainer");
+    const choices = document.getElementById("choices");
+    const feedback = document.getElementById("feedback");
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const correctSound = document.getElementById("correctSound");
+
+    let mode = '';
+    let currentQuestion = 0;
+    let score = 0;
+    let correctAnswer = null;
+    const totalQuestions = 10;
+    let currentDirection = '';
+    let previousQuestionKey = '';
+
+    const animals = ["いぬ", "くま", "うさぎ", "さる", "らいおん", "ねずみ"];
+
+    function showStart() {
+      startScreen.style.display = "block";
+      gameScreen.style.display = "none";
+      resultScreen.style.display = "none";
+    }
+
+    function startGame(selectedMode) {
+      mode = selectedMode;
+      currentQuestion = 0;
+      score = 0;
+      previousQuestionKey = '';
+      showNextQuestion();
+      startScreen.style.display = "none";
+      gameScreen.style.display = "block";
+    }
+
+    function showNextQuestion() {
+      feedback.textContent = "";
+      choices.innerHTML = "";
+      imageContainer.innerHTML = "";
+
+      let directions = ["left", "right", "top", "bottom", "front", "back"];
+      currentDirection = mode === "all" ? directions[Math.floor(Math.random() * directions.length)] : mode;
+
+      const numImages = 5;
+      let correctIndex;
+
+      let questionKey;
+
+      do {
+        correctIndex = Math.floor(Math.random() * numImages);
+        if (currentDirection === "front" || currentDirection === "back") {
+          let index = Math.floor(Math.random() * animals.length);
+          questionKey = currentDirection + "-" + index;
+        } else {
+          questionKey = currentDirection + "-" + correctIndex;
+        }
+      } while (questionKey === previousQuestionKey);
+
+      previousQuestionKey = questionKey;
+
+      if (currentDirection === "left" || currentDirection === "right") {
+        imageContainer.className = "";
+        choices.parentElement.style.flexDirection = "column";
+      } else if (currentDirection === "top" || currentDirection === "bottom") {
+        imageContainer.className = "vertical";
+        choices.parentElement.style.flexDirection = "row";
+      } else {
+        imageContainer.className = "";
+        choices.parentElement.style.flexDirection = "column";
+      }
+
+      if (currentDirection === "front" || currentDirection === "back") {
+        const img = document.createElement("img");
+        img.src = `images/img6.png`;
+        img.style.width = "600px";
+        imageContainer.appendChild(img);
+
+        let index = parseInt(questionKey.split("-")[1]);
+        correctAnswer = currentDirection === "front" ? animals[index] : animals.slice().reverse()[index];
+
+        questionEl.textContent = `${currentDirection === "front" ? "まえ" : "うしろ"}から${index + 1}ばんめはなに？`;
+
+        animals.forEach(animal => {
+          const btn = document.createElement("button");
+          btn.className = "option";
+          btn.textContent = animal;
+          btn.onclick = () => checkAnswer(animal, correctAnswer);
+          choices.appendChild(btn);
+        });
+        return;
+      }
+
+      for (let i = 0; i < numImages; i++) {
+        const box = document.createElement("div");
+        box.className = "image-box";
+        const img = document.createElement("img");
+        img.src = `images/img${i + 1}.png`;
+        if (i === correctIndex) {
+          img.style.borderColor = "red";
+        }
+        box.appendChild(img);
+        imageContainer.appendChild(box);
+      }
+
+      let answer = currentDirection === "left" || currentDirection === "top"
+        ? correctIndex + 1 : numImages - correctIndex;
+
+      correctAnswer = answer;
+
+      questionEl.textContent = `${getDirectionLabel(currentDirection)}からなんばんめ？`;
+
+      for (let i = 1; i <= numImages; i++) {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = i;
+        btn.onclick = () => checkAnswer(i, correctAnswer);
+        choices.appendChild(btn);
+      }
+    }
+
+    function getDirectionLabel(mode) {
+      switch (mode) {
+        case "left": return "ひだり";
+        case "right": return "みぎ";
+        case "top": return "うえ";
+        case "bottom": return "した";
+        default: return "";
+      }
+    }
+
+    function checkAnswer(selected, correct) {
+      if (selected == correct) {
+        correctSound.play();
+        feedback.textContent = "〇";
+        feedback.style.color = "red";
+        score += 10;
+      } else {
+        feedback.textContent = "？";
+        feedback.style.color = "black";
+      }
+
+      currentQuestion++;
+      if (currentQuestion < totalQuestions) {
+        setTimeout(showNextQuestion, 1000);
+      } else {
+        setTimeout(showResult, 1000);
+      }
+    }
+
+    function showResult() {
+      gameScreen.style.display = "none";
+      resultScreen.style.display = "block";
+      scoreDisplay.textContent = `あなたのてんすう：${score}てん　（＾＾）`;
+
+      setTimeout(showStart, 4000);
+    }
+
+    window.onload = showStart;
+  </script>
+</body>
+</html>
