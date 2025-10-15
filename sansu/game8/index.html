@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>かくれたかずゲーム</title>
+  <style>
+    @font-face {
+      font-family: "Kyoukasho";
+      src: url("fonts/kyoukasyo.otf");
+    }
+
+    body {
+      font-family: "Kyoukasho", sans-serif;
+      background-color: #fff7f0;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 2em;
+      color: #444;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .button {
+      background-color: #ffe0e9;
+      border: none;
+      padding: 15px 25px;
+      margin: 10px;
+      border-radius: 12px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .button:hover {
+      background-color: #ffd4dd;
+    }
+
+    #image-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      position: relative;
+      min-height: 100px;
+    }
+
+    .image-box {
+      position: relative;
+      margin: 5px;
+    }
+
+    .image-box img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .cover-bar {
+      position: absolute;
+      height: 80px;
+      background-color: green;
+      z-index: 5;
+      top: 0;
+      border-radius: 8px;
+      transition: all 1s ease;
+    }
+
+    .easy {
+      opacity: 0.6; /* うっすらと見える程度に濃く */
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #feedback {
+      font-size: 2em;
+      margin-top: 20px;
+    }
+
+    .answer-buttons {
+      margin-top: 20px;
+    }
+
+    .answer-buttons .button {
+      padding: 10px 15px;
+      font-size: 1.1em;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="start" class="screen active">
+    <h1>かくれたかずゲーム</h1>
+    <p>いくつの画像？</p>
+    <div id="count-buttons"></div>
+  </div>
+
+  <div id="level" class="screen">
+    <h1>レベルをえらんでね</h1>
+    <button class="button" onclick="selectLevel('easy')">かんたん</button>
+    <button class="button" onclick="selectLevel('hard')">ふつう</button>
+  </div>
+
+  <div id="game" class="screen">
+    <h1>いくつかくれた？</h1>
+    <div id="image-container"></div>
+    <button class="button" id="problem-button" onclick="hideImages()">もんだい</button>
+    <div class="answer-buttons" id="answer-buttons"></div>
+    <div id="feedback"></div>
+  </div>
+
+  <audio id="correct-sound" src="sounds/correct.mp3"></audio>
+
+  <script>
+    const counts = [5, 6, 7, 8, 9, 10];
+    const countButtonsDiv = document.getElementById("count-buttons");
+    const imageContainer = document.getElementById("image-container");
+    const feedback = document.getElementById("feedback");
+    const correctSound = document.getElementById("correct-sound");
+    const answerButtonsDiv = document.getElementById("answer-buttons");
+    const problemButton = document.getElementById("problem-button");
+
+    let total = 0;
+    let hiddenCount = 0;
+    let level = "easy";
+    let questionCount = 0;
+
+    // 初期の数ボタン生成
+    counts.forEach(n => {
+      const btn = document.createElement("button");
+      btn.textContent = n;
+      btn.className = "button";
+      btn.onclick = () => {
+        total = n;
+        showScreen("level");
+      };
+      countButtonsDiv.appendChild(btn);
+    });
+
+    function selectLevel(selectedLevel) {
+      level = selectedLevel;
+      startGame();
+    }
+
+    function startGame() {
+      questionCount = 0;
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      feedback.textContent = "";
+      imageContainer.innerHTML = "";
+      answerButtonsDiv.innerHTML = "";
+      problemButton.style.display = "inline-block";
+
+      for (let i = 0; i < total; i++) {
+        const box = document.createElement("div");
+        box.className = "image-box";
+        const img = document.createElement("img");
+        img.src = "images/your_image.png"; // ここに任意の画像パス
+        box.appendChild(img);
+        imageContainer.appendChild(box);
+      }
+
+      for (let i = 1; i <= 10; i++) {
+        const btn = document.createElement("button");
+        btn.className = "button";
+        btn.textContent = i;
+        btn.onclick = () => checkAnswer(i);
+        answerButtonsDiv.appendChild(btn);
+      }
+
+      showScreen("game");
+    }
+
+    function hideImages() {
+      problemButton.style.display = "none"; // もんだいボタンを隠す
+
+      const boxes = document.querySelectorAll(".image-box");
+      const boxWidth = boxes[0].offsetWidth + 10; // width + margin
+
+      hiddenCount = Math.floor(Math.random() * total) + 1;
+      const startIdx = Math.floor(Math.random() * (total - hiddenCount + 1));
+
+      const cover = document.createElement("div");
+      cover.className = "cover-bar";
+      if (level === "easy") {
+        cover.classList.add("easy");
+      }
+
+      const left = boxes[startIdx].offsetLeft;
+      const width = boxWidth * hiddenCount;
+
+      cover.style.left = left + "px";
+      cover.style.width = width + "px";
+
+      imageContainer.appendChild(cover);
+    }
+
+    function checkAnswer(userAnswer) {
+      if (userAnswer === hiddenCount) {
+        feedback.textContent = "〇";
+        feedback.style.color = "red";
+        correctSound.play();
+      } else {
+        feedback.textContent = "？";
+        feedback.style.color = "black";
+      }
+
+      questionCount++;
+      if (questionCount >= 5) {
+        setTimeout(() => showScreen("start"), 3000);
+      } else {
+        setTimeout(nextQuestion, 2000);
+      }
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+  </script>
+</body>
+</html>
