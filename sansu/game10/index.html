@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>アイス屋さんゲーム 🍦（CSSコーン版）</title>
+<style>
+  :root{
+    --ice-size:112px;
+    --cone-width:154px;
+    --cone-height:196px;
+  }
+  body{
+    font-family:"Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    background:#f8fbff; margin:20px; text-align:center;
+  }
+  h1{font-size:22px}
+  .game{max-width:900px;margin:0 auto}
+
+  .shelf{
+    display:flex;justify-content:center;gap:10px;margin:16px 0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px
+  }
+
+  .ice{
+    width:var(--ice-size);height:var(--ice-size);border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:bold;font-size:20px;cursor:pointer;border:3px solid transparent;flex-shrink:0;box-shadow:0 6px 14px rgba(0,0,0,0.08);
+    transition:transform .18s,border-color .18s,box-shadow .18s;
+  }
+  .ice:hover{transform:translateY(-6px)}
+  .selected{border-color:#007bff}
+
+  .cone-container{position:relative;width:var(--cone-width);height:calc(var(--cone-height) + var(--ice-size));margin:0 auto;}
+
+  .cone{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:100%;height:var(--cone-height);
+    background:linear-gradient(180deg,#f9f2d8 0%,#f2d3a0 40%,#d99a56 100%);
+    clip-path: polygon(50% 100%, 0 12%, 12% 0, 88% 0, 100% 12%);
+    border-radius:8px 8px 0 0;box-shadow:0 6px 12px rgba(0,0,0,0.08);
+    overflow:hidden;z-index:1;
+  }
+  .cone::before{
+    content:"";position:absolute;inset:20% 6% 4% 6%;background-image:repeating-linear-gradient(135deg, rgba(0,0,0,0.03) 0 6px, transparent 6px 12px);opacity:0.35;transform:rotate(0deg);
+  }
+  .cone::after{
+    content:"";position:absolute;left:50%;transform:translateX(-50%);top:4%;width:86%;height:34%;background:radial-gradient(circle at 50% 20%, rgba(255,255,255,0.9), rgba(255,255,255,0.2));border-radius:50%;opacity:0.9;
+  }
+
+  .dropped{
+    position:absolute;left:50%;transform:translate(-50%,0);width:calc(var(--ice-size) - 7px);height:calc(var(--ice-size) - 7px);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;border:4px solid #fff;
+    box-shadow:0 8px 18px rgba(0,0,0,0.18);opacity:0;z-index:2;
+  }
+
+  @keyframes dropIn{
+    from{transform:translate(-50%,-220px) scale(.9);opacity:0}
+    70%{transform:translate(-50%,10px) scale(1.02);opacity:1}
+    to{transform:translate(-50%,0) scale(1);opacity:1}
+  }
+
+  .controls{margin-top:16px}
+  button{padding:8px 14px;border-radius:8px;border:1px solid #ccc;cursor:pointer;background:#fff}
+  button:hover{background:#f0f0f0}
+  .message{margin-top:12px;font-weight:bold}
+  .red-dot{width:24px;height:24px;background:red;border-radius:50%;display:inline-block;margin-right:8px}
+  .silent-q{font-size:40px}
+
+  @media(max-width:480px){:root{--ice-size:96px}}
+</style>
+</head>
+<body>
+<div class="game">
+  <h1>アイス屋さんゲーム 🍦（CSSコーン）</h1>
+  <div id="question"></div>
+  <div class="shelf" id="shelf"></div>
+
+  <div class="cone-container">
+    <div id="coneArea"></div>
+    <div class="cone"></div>
+  </div>
+
+  <div class="controls">
+    <button id="doneBtn">できた</button>
+    <button id="nextBtn">つぎの問題</button>
+    <button id="resetBtn">リセット</button>
+  </div>
+
+  <div class="message" id="result"></div>
+  <div class="message" id="score"></div>
+</div>
+<audio id="correctSound" src="sounds/correct.mp3" preload="auto"></audio>
+<script>
+const FLAVORS = [
+  {key:'banana', label:'ばなな', color:'linear-gradient(135deg,#ffe066,#ffcc33)'},
+  {key:'choco',  label:'ちょこ',  color:'linear-gradient(135deg,#5b3a29,#3e2723)'},
+  {key:'melon',  label:'めろん',  color:'linear-gradient(135deg,#a8e063,#56ab2f)'},
+  {key:'ichigo', label:'いちご',  color:'linear-gradient(135deg,#ff758c,#ff7eb3)'},
+  {key:'soda',   label:'そーだ',  color:'linear-gradient(135deg,#89f7fe,#66a6ff)'},
+  {key:'grape',  label:'ぶどう',  color:'linear-gradient(135deg,#a18cd1,#fbc2eb)'},
+  {key:'orange', label:'おれんじ',color:'linear-gradient(135deg,#ffb347,#ffcc33)'}
+];
+
+const shelf=document.getElementById('shelf');
+const questionDiv=document.getElementById('question');
+const coneArea=document.getElementById('coneArea');
+const doneBtn=document.getElementById('doneBtn');
+const nextBtn=document.getElementById('nextBtn');
+const resetBtn=document.getElementById('resetBtn');
+const resultDiv=document.getElementById('result');
+const scoreDiv=document.getElementById('score');
+const correctSound=document.getElementById('correctSound');
+
+let order=[];let leftNum=1;let rightNum=1;let selected=[];let dropped=[];let currentQuestion=0;let score=0;let voiceList=[];
+function shuffle(a){return a.slice().sort(()=>Math.random()-0.5)}
+
+function renderShelf(){
+  shelf.innerHTML='';
+  order.forEach(f=>{
+    const d=document.createElement('div');
+    d.className='ice';d.style.background=f.color;d.textContent=f.label;d.dataset.key=f.key;
+    d.addEventListener('click',()=>onSelect(d,f));
+    shelf.appendChild(d);
+  });
+}
+
+function onSelect(div,flavor){
+  const key=flavor.key;
+  if(selected.includes(key)){
+    selected=selected.filter(k=>k!==key);
+    div.classList.remove('selected');
+    const node=dropped.find(n=>n.dataset.key===key);
+    if(node){node.remove();dropped=dropped.filter(x=>x!==node)}
+    return;
+  }
+  if(selected.length>=2){alert('えらべるのは2つまでだよ！');return}
+  selected.push(key);div.classList.add('selected');
+  const clone=div.cloneNode(true);
+  clone.classList.add('dropped');clone.dataset.key=key;
+  const level=selected.length;
+  // アイスの位置を少し下げてコーンの白い部分に重なるように調整
+  const bottomMap={1:'160px',2:'230px'};
+  clone.style.bottom=bottomMap[level]||'160px';
+  coneArea.appendChild(clone);
+  requestAnimationFrame(()=>{clone.style.animation='dropIn 0.8s ease-out forwards';});
+  dropped.push(clone);
+}
+
+function speak(text){
+  if(!voiceList.length)voiceList=speechSynthesis.getVoices();
+  const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';
+  const preferred=voiceList.find(v=>v.name.includes('Kyoko'))||voiceList.find(v=>v.lang.startsWith('ja'));
+  if(preferred)u.voice=preferred;u.rate=1.0;u.pitch=1.0;speechSynthesis.cancel();speechSynthesis.speak(u);
+}
+
+function newQuestion(){
+  if(currentQuestion>=10){scoreDiv.textContent=`🎉 ゲームおわり！スコア：${score}点（正解 ${score/10}問）`;questionDiv.textContent='';shelf.innerHTML='';coneArea.innerHTML='';return}
+  order=shuffle(FLAVORS);leftNum=Math.floor(Math.random()*7)+1;rightNum=Math.floor(Math.random()*7)+1;
+  selected=[];dropped.forEach(n=>n.remove());dropped=[];resultDiv.textContent='';
+  const text=`ひだりから ${leftNum}ばんめ、みぎから ${rightNum}ばんめ`;
+  questionDiv.textContent=`問題 ${currentQuestion+1}：${text}`;speak(text);renderShelf();
+}
+
+function evaluate(){
+  if(selected.length!==2){alert('2つえらんでね！');return}
+  const leftKey=order[leftNum-1].key;const rightKey=order[order.length-rightNum].key;
+  const correct=[leftKey,rightKey];
+  const isCorrect=selected.every(k=>correct.includes(k))&&selected.length===correct.length;
+  if(isCorrect){resultDiv.innerHTML='<span class="red-dot"></span>せいかい！';try{correctSound.currentTime=0;correctSound.play();}catch(e){};score+=10}
+  else{resultDiv.innerHTML='<span class="silent-q">？</span>ざんねん…'}
+  currentQuestion++;
+}
+
+doneBtn.addEventListener('click',evaluate);
+nextBtn.addEventListener('click',newQuestion);
+resetBtn.addEventListener('click',()=>{order=FLAVORS.slice();leftNum=rightNum=1;selected=[];dropped.forEach(n=>n.remove());dropped=[];currentQuestion=0;score=0;questionDiv.textContent='';resultDiv.textContent='';scoreDiv.textContent='';renderShelf();});
+
+speechSynthesis.onvoiceschanged=()=>{voiceList=speechSynthesis.getVoices();};
+newQuestion();
+</script>
+</body>
+</html>
