@@ -38,7 +38,7 @@
       gap: 18px;
       align-items: center;
     }
-    a {
+    a, button {
       display: block;
       padding: 18px 25px;
       font-size: 1.6rem;
@@ -49,54 +49,113 @@
       width: 300px;
       box-shadow: 2px 4px 6px rgba(0,0,0,0.15);
       transition: 0.2s;
+      border: none;
+      cursor: pointer;
     }
-    /* 国語（赤系） */
-    .kokugo a {
+    /* メインメニュー色 */
+    .mainmenu button {
+      background: #666;
+    }
+    .mainmenu button:hover {
+      background: #555;
+    }
+    /* 各教科の色 */
+    .hiragana a, .katakana a {
       background: #f85a5a;
     }
-    .kokugo a:hover {
+    .hiragana a:hover, .katakana a:hover {
       background: #e14b4b;
     }
-    /* 算数（青系） */
-    .sansu a {
+    .suuji a, .keisan a {
       background: #4a90e2;
     }
-    .sansu a:hover {
+    .suuji a:hover, .keisan a:hover {
       background: #3578c6;
+    }
+    .back-btn {
+      margin-top: 30px;
+      background: #999;
+      color: #fff;
+      width: 200px;
+    }
+    .back-btn:hover {
+      background: #777;
+    }
+    section {
+      display: none;
+    }
+    section.active {
+      display: block;
     }
   </style>
 </head>
 <body>
   <h1>ゲームメニュー</h1>
-  <div class="menu kokugo">
-    <h2>✏️ こくご</h2>
-    <a href="kokugo/game1/index.html">ひらがな１　みわけ</a>
-    <a href="kokugo/game2/index.html">ひらがな２　よみ</a>
-    <a href="kokugo/game3/index.html">ひらがな３　あたまのことば</a>
-    <a href="kokugo/game4/index.html">ひらがな４　おとあて</a>
-    <a href="kokugo/game5/index.html">ひらがな５　２～３もじ</a>
-   <a href="kokugo/game6/index.html">カタカナ１　ひらがなからカタカナ</a>
-  </div>
-  
-  <div class="menu sansu">
-    <h2>🔢 さんすう</h2>
-    <a href="sansu/game1/index.html">すうじ１　よみ</a>
-    <a href="sansu/game2/index.html">すうじ２　なんかい？</a>
-    <a href="sansu/game3/index.html">すうじ３　ならべよう</a>
-    <a href="sansu/game4/index.html">すうじ４　なんこ？</a>
-    <a href="sansu/game5/index.html">すうじ５　すうじと〇</a>
-    <a href="sansu/game6/index.html">すうじ６　うごかそう</a>
-    <a href="sansu/game7/index.html">すうじ７　おおきい？ちいさい？</a>
-    <a href="sansu/game8/index.html">すうじ８　かくれたかず</a>
-    <a href="sansu/game9/index.html">すうじ９　なんばんめ</a>
-    <a href="sansu/game10/index.html">すうじ１０　あいすはなんばんめ</a>
-   <a href="sansu/game11/index.html">すうじ１１　たしざん</a>
-  </div>
+
+  <!-- メインメニュー -->
+  <section id="main" class="active">
+    <div class="menu mainmenu">
+      <button onclick="showPage('hiragana')">✏️ ひらがな</button>
+      <button onclick="showPage('katakana')">🔤 カタカナ</button>
+      <button onclick="showPage('suuji')">🔢 すうじ</button>
+      <button onclick="showPage('keisan')">➕ けいさん</button>
+    </div>
+  </section>
+
+  <!-- ひらがな -->
+  <section id="hiragana">
+    <div class="menu hiragana">
+      <h2>✏️ ひらがな</h2>
+      <a href="kokugo/game1/index.html">ひらがな１　みわけ</a>
+      <a href="kokugo/game2/index.html">ひらがな２　よみ</a>
+      <a href="kokugo/game3/index.html">ひらがな３　あたまのことば</a>
+      <a href="kokugo/game4/index.html">ひらがな４　おとあて</a>
+      <a href="kokugo/game5/index.html">ひらがな５　２～３もじ</a>
+      <button class="back-btn" onclick="showPage('main')">← もどる</button>
+    </div>
+  </section>
+
+  <!-- カタカナ -->
+  <section id="katakana">
+    <div class="menu katakana">
+      <h2>🔤 カタカナ</h2>
+      <a href="kokugo/game6/index.html">カタカナ１　ひらがなからカタカナ</a>
+      <button class="back-btn" onclick="showPage('main')">← もどる</button>
+    </div>
+  </section>
+
+  <!-- すうじ -->
+  <section id="suuji">
+    <div class="menu suuji">
+      <h2>🔢 すうじ</h2>
+      <a href="sansu/game1/index.html">すうじ１　よみ</a>
+      <a href="sansu/game2/index.html">すうじ２　なんかい？</a>
+      <a href="sansu/game3/index.html">すうじ３　ならべよう</a>
+      <a href="sansu/game4/index.html">すうじ４　なんこ？</a>
+      <a href="sansu/game5/index.html">すうじ５　すうじと〇</a>
+      <a href="sansu/game6/index.html">すうじ６　うごかそう</a>
+      <a href="sansu/game7/index.html">すうじ７　おおきい？ちいさい？</a>
+      <a href="sansu/game8/index.html">すうじ８　かくれたかず</a>
+      <a href="sansu/game9/index.html">すうじ９　なんばんめ</a>
+      <a href="sansu/game10/index.html">すうじ１０　あいすはなんばんめ</a>
+      <button class="back-btn" onclick="showPage('main')">← もどる</button>
+    </div>
+  </section>
+
+  <!-- けいさん -->
+  <section id="keisan">
+    <div class="menu keisan">
+      <h2>➕ けいさん</h2>
+      <a href="sansu/game11/index.html">すうじ１１　たしざん</a>
+      <button class="back-btn" onclick="showPage('main')">← もどる</button>
+    </div>
+  </section>
+
+  <script>
+    function showPage(id) {
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+  </script>
 </body>
 </html>
-
-
-
-
-
-
