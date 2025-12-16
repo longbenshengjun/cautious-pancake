@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ビジョントレーニング</title>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: sans-serif;
+    position: fixed;
+    inset: 0;
+    background: #fff;
+  }
+
+  #initial, #animation {
+    display: none;
+    width: 100%;
+    height: 100svh; /* iPad対応の安全な全画面 */
+    overflow: hidden;
+  }
+
+  #initial.active, #animation.active {
+    display: block;
+  }
+
+  .hiragana {
+    cursor: pointer;
+    display: block;
+    margin: 13.5px;
+    font-size: 1.8em;
+  }
+
+  .moving-text {
+    position: absolute;
+    font-size: 2.7em;
+    animation-duration: 10s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    white-space: nowrap; /* 文字切れ防止 */
+  }
+
+  #hiragana-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap-reverse;
+    align-content: flex-end;
+    height: calc(100svh - 120px);
+    width: 100%;
+    overflow-y: auto;
+  }
+
+  #back-button {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    z-index: 10;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="initial" class="active">
+  <p>選択してください（最大15文字）:</p>
+  <div id="hiragana-list"></div>
+  <button id="start-animation">スタート</button>
+</div>
+
+<div id="animation">
+  <button id="back-button">もどる</button>
+</div>
+
+<script>
+const hiragana = [
+  "あ","い","う","え","お",
+  "か","き","く","け","こ",
+  "さ","し","す","せ","そ",
+  "た","ち","つ","て","と",
+  "な","に","ぬ","ね","の",
+  "は","ひ","ふ","へ","ほ",
+  "ま","み","む","め","も",
+  "や","ゆ","よ",
+  "ら","り","る","れ","ろ",
+  "わ","を","ん",
+  "が","ぎ","ぐ","げ","ご",
+  "ざ","じ","ず","ぜ","ぞ",
+  "だ","ぢ","づ","で","ど",
+  "ば","び","ぶ","べ","ぼ",
+  "ぱ","ぴ","ぷ","ぺ","ぽ",
+  "っ",
+
+  "きゃ","きゅ","きょ","ぎゃ","ぎゅ","ぎょ",
+  "しゃ","しゅ","しょ","じゃ","じゅ","じょ",
+  "ちゃ","ちゅ","ちょ","ぢゃ","ぢゅ","ぢょ",
+  "にゃ","にゅ","にょ","ひゃ","ひゅ","ひょ",
+  "びゃ","びゅ","びょ","ぴゃ","ぴゅ","ぴょ",
+  "みゃ","みゅ","みょ","りゃ","りゅ","りょ"
+];
+
+const list = document.getElementById("hiragana-list");
+let selected = [];
+
+hiragana.forEach(char => {
+  const span = document.createElement("span");
+  span.className = "hiragana";
+  span.textContent = char;
+  span.onclick = () => {
+    if (selected.length < 15) selected.push(char);
+  };
+  list.appendChild(span);
+});
+
+document.getElementById("start-animation").onclick = startAnimation;
+
+function startAnimation() {
+  document.getElementById("initial").classList.remove("active");
+  document.getElementById("animation").classList.add("active");
+
+  const anim = document.getElementById("animation");
+
+  const style = document.createElement("style");
+
+  selected.forEach((char, i) => {
+    const span = document.createElement("span");
+    span.className = "moving-text";
+    span.textContent = char;
+    span.style.animationName = `move${i}`;
+    anim.appendChild(span);
+
+    // 文字が切れない安全域（5%〜85%）
+    const x1 = 5 + Math.random() * 80;
+    const y1 = 5 + Math.random() * 80;
+    const x2 = 5 + Math.random() * 80;
+    const y2 = 5 + Math.random() * 80;
+
+    style.innerHTML += `
+      @keyframes move${i} {
+        0% { transform: translate(${x1}vw, ${y1}svh); }
+        100% { transform: translate(${x2}vw, ${y2}svh); }
+      }
+    `;
+  });
+
+  document.head.appendChild(style);
+}
+
+document.getElementById("back-button").onclick = () => {
+  location.reload();
+};
+</script>
+
+</body>
+</html>
