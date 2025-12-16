@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ビジョントレーニング</title>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    font-family:
+      "UD デジタル 教科書体 NK-B",
+      "UD Digi Kyokasho NK-B",
+      "Hiragino Maru Gothic ProN",
+      "BIZ UDゴシック",
+      "Yu Gothic",
+      "Meiryo",
+      sans-serif;
+  }
+
+  #initial, #animation {
+    display: none;
+    width: 100%;
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  #initial.active, #animation.active {
+    display: block;
+  }
+
+  .hiragana {
+    cursor: pointer;
+    display: block;
+    margin: 13.5px;
+    font-size: 1.8em;
+  }
+
+  .moving-text {
+    position: absolute;
+    font-size: 2.7em;
+    animation-duration: 10s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    white-space: nowrap;
+  }
+
+  #hiragana-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap-reverse;
+    align-content: flex-end;
+    height: calc(100svh - 120px);
+    width: 100%;
+    overflow-y: auto;
+  }
+
+  #back-button {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    z-index: 10;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="initial" class="active">
+  <p>選択してください（最大15文字）:</p>
+  <div id="hiragana-list"></div>
+  <button id="start-animation">スタート</button>
+</div>
+
+<div id="animation">
+  <button id="back-button">もどる</button>
+</div>
+
+<script>
+const hiragana = [
+  "あ","い","う","え","お","〇","か","き","く","け","こ",
+  "さ","し","す","せ","そ","〇","た","ち","つ","て","と",
+  "な","に","ぬ","ね","の","〇","は","ひ","ふ","へ","ほ",
+  "ま","み","む","め","も","〇","や","ゆ","よ","〇","〇",
+  "ら","り","る","れ","ろ","〇","わ","を","ん","〇","っ",
+
+  "が","ぎ","ぐ","げ","ご","〇","ざ","じ","ず","ぜ","ぞ",
+  "だ","ぢ","づ","で","ど","〇","ば","び","ぶ","べ","ぼ",
+  "ぱ","ぴ","ぷ","ぺ","ぽ","〇","〇","〇","〇","〇","〇",
+
+  "きゃ","きゅ","きょ","〇","ぎゃ","ぎゅ","ぎょ","〇",
+  "しゃ","しゅ","しょ",
+  "じゃ","じゅ","じょ","〇",
+  "ちゃ","ちゅ","ちょ","〇",
+  "ぢゃ","ぢゅ","ぢょ",
+
+  "にゃ","にゅ","にょ","〇",
+  "ひゃ","ひゅ","ひょ","〇",
+  "びゃ","びゅ","びょ",
+  "ぴゃ","ぴゅ","ぴょ","〇",
+  "みゃ","みゅ","みょ","〇",
+  "りゃ","りゅ","りょ"
+];
+
+const list = document.getElementById("hiragana-list");
+let selected = [];
+
+hiragana.forEach(char => {
+  const span = document.createElement("span");
+  span.className = "hiragana";
+  span.textContent = char;
+  span.onclick = () => {
+    if (selected.length < 15) selected.push(char);
+  };
+  list.appendChild(span);
+});
+
+document.getElementById("start-animation").onclick = startAnimation;
+
+function startAnimation() {
+  document.getElementById("initial").classList.remove("active");
+  document.getElementById("animation").classList.add("active");
+
+  const anim = document.getElementById("animation");
+  const style = document.createElement("style");
+
+  selected.forEach((char, i) => {
+    const span = document.createElement("span");
+    span.className = "moving-text";
+    span.textContent = char;
+    span.style.animationName = `move${i}`;
+    anim.appendChild(span);
+
+    const x1 = 5 + Math.random() * 80;
+    const y1 = 5 + Math.random() * 80;
+    const x2 = 5 + Math.random() * 80;
+    const y2 = 5 + Math.random() * 80;
+
+    style.innerHTML += `
+      @keyframes move${i} {
+        0% { transform: translate(${x1}vw, ${y1}svh); }
+        100% { transform: translate(${x2}vw, ${y2}svh); }
+      }
+    `;
+  });
+
+  document.head.appendChild(style);
+}
+
+document.getElementById("back-button").onclick = () => {
+  location.reload();
+};
+</script>
+
+</body>
+</html>
