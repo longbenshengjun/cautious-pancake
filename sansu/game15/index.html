@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>びじょんとれーにんぐ：すうじさがし</title>
+
+<style>
+body {
+  font-family: "Yu Mincho", serif;
+  background-color: #fff8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+#gameArea {
+  width: 80vw;
+  height: 60vh;
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  position: relative;
+  background: #fff;
+}
+
+.number {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  line-height: 60px;
+  border-radius: 50%;
+  background: #a3d8f4;
+  text-align: center;
+  font-size: 2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+#countdown, #message {
+  font-size: 2.5rem;
+  margin: 15px;
+}
+
+#startBtn {
+  font-size: 1.5rem;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #f6c1c1;
+  cursor: pointer;
+}
+
+#resultScreen {
+  display: none;
+  font-size: 5rem;
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.pulse {
+  animation: pulse 1s infinite;
+}
+
+audio { display:none; }
+</style>
+</head>
+
+<body>
+
+<h1 id="title">びじょんとれーにんぐ：すうじさがし</h1>
+<button id="startBtn">すたーと</button>
+
+<div id="countdown"></div>
+<div id="message"></div>
+<div id="gameArea"></div>
+<div id="resultScreen"></div>
+
+<audio id="beepSound" src="https://freesound.org/data/previews/522/522854_11589271-lq.mp3"></audio>
+
+<script>
+const startBtn = document.getElementById("startBtn");
+const gameArea = document.getElementById("gameArea");
+const countdown = document.getElementById("countdown");
+const message = document.getElementById("message");
+const resultScreen = document.getElementById("resultScreen");
+const title = document.getElementById("title");
+const beep = document.getElementById("beepSound");
+
+let round = 0;
+let totalScore = 0;
+let currentNumber = 1;
+let startTime;
+let timer;
+let positions = [];
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function showCountdown(){
+  for(let i=3;i>0;i--){
+    countdown.textContent = i;
+    await sleep(1000);
+  }
+  countdown.textContent = "";
+}
+
+function getScore(time){
+  const max = (round===3)?34:33;
+  if(time<=8) return max;
+  return Math.max(max - Math.ceil(time-8)*2, 0);
+}
+
+function clearGame(){
+  gameArea.innerHTML="";
+  positions = [];
+}
+
+/* ★ かさならないばしょをさがす ★ */
+function getNonOverlapPosition(){
+  const size = 70;
+  let x, y, ok;
+  let count = 0;
+
+  do {
+    x = Math.random() * (gameArea.clientWidth - size);
+    y = Math.random() * (gameArea.clientHeight - size);
+    ok = positions.every(p =>
+      Math.abs(p.x - x) > size ||
+      Math.abs(p.y - y) > size
+    );
+    count++;
+  } while (!ok && count < 100);
+
+  positions.push({x, y});
+  return {x, y};
+}
+
+function showNumbers(){
+  clearGame();
+  currentNumber = 1;
+
+  for(let i=1;i<=10;i++){
+    const d = document.createElement("div");
+    d.className = "number";
+    d.textContent = i;
+
+    const p = getNonOverlapPosition();
+    d.style.left = p.x + "px";
+    d.style.top = p.y + "px";
+
+    d.onclick = () => clickNumber(i, d);
+    gameArea.appendChild(d);
+  }
+
+  startTime = Date.now();
+  timer = setTimeout(nextRound, 15000);
+}
+
+function clickNumber(n, el){
+  if(n !== currentNumber) return;
+
+  beep.currentTime = 0;
+  beep.play();
+  el.remove();
+
+  if(n === 10){
+    clearTimeout(timer);
+    const time = (Date.now() - startTime) / 1000;
+    const s = getScore(time);
+    totalScore += s;
+    message.textContent = `${s}てん`;
+    setTimeout(nextRound, 1500);
+  } else {
+    currentNumber++;
+  }
+}
+
+async function nextRound(){
+  round++;
+  message.textContent = "";
+
+  if(round > 3){
+    showResult();
+    return;
+  }
+
+  await showCountdown();
+  showNumbers();
+}
+
+function showResult(){
+  title.style.display="none";
+  gameArea.style.display="none";
+  startBtn.style.display="none";
+  message.style.display="none";
+
+  resultScreen.style.display="block";
+  resultScreen.textContent = `${totalScore}てん`;
+
+  if(totalScore === 100){
+    resultScreen.classList.add("pulse");
+  }
+
+  setTimeout(resetGame, 5000);
+}
+
+function resetGame(){
+  round = 0;
+  totalScore = 0;
+  resultScreen.classList.remove("pulse");
+  resultScreen.style.display="none";
+
+  title.style.display="block";
+  gameArea.style.display="block";
+  startBtn.style.display="block";
+  message.style.display="block";
+}
+
+startBtn.onclick = () => {
+  startBtn.style.display="none";
+  nextRound();
+};
+</script>
+
+</body>
+</html>
