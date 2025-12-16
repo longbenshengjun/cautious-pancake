@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ビジョントレーニング</title>
+<style>
+  body {
+    font-family: sans-serif;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #initial, #animation {
+    display: none;
+  }
+
+  #initial.active, #animation.active {
+    display: block;
+  }
+
+  /* 文字サイズ90%、間隔90% */
+  .hiragana {
+    cursor: pointer;
+    display: block;
+    margin: 13.5px; /* 15px × 0.9 */
+    font-size: 1.8em; /* 2em × 0.9 */
+  }
+
+  .moving-text {
+    position: absolute;
+    animation-duration: 10s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    font-size: 2.7em; /* 3em × 0.9 */
+  }
+
+  #hiragana-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap-reverse;
+    align-content: flex-end;
+    height: 400px;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<div id="initial" class="active">
+  <p>選択してください（最大15文字）:</p>
+  <div id="hiragana-list"></div>
+  <button id="start-animation">スタート</button>
+</div>
+
+<div id="animation">
+  <button id="back-button" style="position:absolute; bottom:10px;">もどる</button>
+</div>
+
+<script>
+  // ひらがな配列（ゃ・ゅ・ょ削除＋拗音追加）
+  const hiragana = [
+    "あ","い","う","え","お",
+    "か","き","く","け","こ",
+    "さ","し","す","せ","そ",
+    "た","ち","つ","て","と",
+    "な","に","ぬ","ね","の",
+    "は","ひ","ふ","へ","ほ",
+    "ま","み","む","め","も",
+    "や","ゆ","よ",
+    "ら","り","る","れ","ろ",
+    "わ","を","ん",
+    "が","ぎ","ぐ","げ","ご",
+    "ざ","じ","ず","ぜ","ぞ",
+    "だ","ぢ","づ","で","ど",
+    "ば","び","ぶ","べ","ぼ",
+    "ぱ","ぴ","ぷ","ぺ","ぽ",
+    "っ",
+
+    /* 追加拗音 */
+    "きゃ","きゅ","きょ","ぎゃ","ぎゅ","ぎょ",
+    "しゃ","しゅ","しょ","じゃ","じゅ","じょ",
+    "ちゃ","ちゅ","ちょ","ぢゃ","ぢゅ","ぢょ",
+    "にゃ","にゅ","にょ","ひゃ","ひゅ","ひょ",
+    "びゃ","びゅ","びょ","ぴゃ","ぴゅ","ぴょ",
+    "みゃ","みゅ","みょ","りゃ","りゅ","りょ"
+  ];
+
+  const hiraganaList = document.getElementById("hiragana-list");
+  let selected = [];
+
+  hiragana.forEach(char => {
+    const span = document.createElement("span");
+    span.className = "hiragana";
+    span.textContent = char;
+    span.addEventListener("click", () => {
+      if (selected.length < 15) {
+        selected.push(char);
+      }
+    });
+    hiraganaList.appendChild(span);
+  });
+
+  document.getElementById("start-animation").addEventListener("click", startAnimation);
+
+  function startAnimation() {
+    document.getElementById("initial").classList.remove("active");
+    document.getElementById("animation").classList.add("active");
+
+    const animationDiv = document.getElementById("animation");
+
+    selected.forEach((char, index) => {
+      const movingChar = document.createElement("span");
+      movingChar.className = "moving-text";
+      movingChar.textContent = char;
+      movingChar.style.animationName = `move${index}`;
+      animationDiv.appendChild(movingChar);
+    });
+
+    const style = document.createElement("style");
+
+    selected.forEach((_, index) => {
+      const x1 = Math.random() * 100;
+      const y1 = Math.random() * 100;
+      const x2 = Math.random() * 100;
+      const y2 = Math.random() * 100;
+
+      style.innerHTML += `
+        @keyframes move${index} {
+          0% { transform: translate(${x1}vw, ${y1}vh); }
+          100% { transform: translate(${x2}vw, ${y2}vh); }
+        }
+      `;
+    });
+
+    document.head.appendChild(style);
+
+    document.getElementById("back-button").onclick = () => {
+      document.getElementById("animation").classList.remove("active");
+      document.getElementById("initial").classList.add("active");
+      selected = [];
+      document.getElementById("animation").innerHTML =
+        '<button id="back-button" style="position:absolute; bottom:10px;">もどる</button>';
+    };
+  }
+</script>
+
+</body>
+</html>
