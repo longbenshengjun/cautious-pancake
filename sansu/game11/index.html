@@ -1,235 +1,226 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>たしざん</title>
-  <style>
-    :root{ --bg:#f7fbff; --card:#fff; --accent:#ff3b30 }
-    html,body{height:100%;}
-    body{
-      margin:0; padding:20px; box-sizing:border-box;
-      font-family: "Kyokasho", "教科書体", "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, "Yu Gothic", sans-serif;
-      background: linear-gradient(180deg,#eef7ff,#ffffff);
-      display:flex; align-items:center; justify-content:center;
-    }
-    .app{
-      width:100%; max-width:720px; background:var(--card); border-radius:16px; box-shadow:0 8px 30px rgba(20,40,80,0.08);
-      padding:28px; text-align:center;
-    }
-    h1{margin:0 0 12px; font-size:28px}
-    .intro{color:#444; margin-bottom:18px}
-    .mode-buttons{display:flex; gap:12px; justify-content:center; margin-bottom:18px}
-    button.mode{padding:14px 22px; font-size:18px; border-radius:12px; border:0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.06);}
-    button.mode:hover{transform:translateY(-2px)}
-    .game-area{display:none}
-    .question-box{margin:18px 0; font-size:36px; font-weight:700}
-    .answers{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
-    .answers button{width:56px;height:56px;border-radius:8px;border:0;font-size:20px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.06)}
-    .answers button:disabled{opacity:0.6;cursor:default}
-    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
-    .progress{font-size:16px}
-    .score{font-size:18px;font-weight:700}
-    .overlay{
-      position:fixed; left:0;top:0;right:0;bottom:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
-    }
-    .big-red, .big-q{
-      width:260px;height:260px;border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:120px; color:white; font-weight:900; transform:scale(0); transition:transform .28s cubic-bezier(.2,.9,.3,1); pointer-events:none;
-    }
-    .big-red{background:var(--accent); box-shadow:0 12px 40px rgba(255,59,48,0.25)}
-    .big-q{background:rgba(0,0,0,0.75); width:200px;height:200px;border-radius:20px;font-size:96px}
-    .big-visible{transform:scale(1)}
-    .result-screen{display:none}
-    .muted{opacity:0.6}
-    .small{font-size:14px}
-    .controls button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>たしざん</title>
+
+<style>
+:root{--accent:#ff3b30}
+html,body{height:100%}
+body{
+  margin:0;padding:20px;
+  font-family:"Kyokasho","Noto Sans JP",Meiryo,sans-serif;
+  background:linear-gradient(180deg,#eef7ff,#fff);
+  display:flex;align-items:center;justify-content:center;
+}
+.app{
+  width:100%;max-width:720px;
+  background:#fff;border-radius:16px;
+  padding:28px;text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+}
+h1{margin:0 0 12px}
+.mode-buttons{display:flex;gap:12px;justify-content:center;margin-bottom:18px}
+button.mode{padding:14px 22px;font-size:18px;border-radius:12px;border:0;cursor:pointer}
+.game-area{display:none}
+.question-box{font-size:36px;margin:18px 0;font-weight:700}
+.answers{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.answers button{
+  width:56px;height:56px;border-radius:8px;border:0;
+  font-size:20px;cursor:pointer;
+}
+.answers button:disabled{opacity:.6}
+
+/* 正解を黄色く点滅 */
+.answers button.correct-hint{
+  background:#ffe066;
+  box-shadow:0 0 14px rgba(255,224,102,.9);
+  animation:blink .3s ease-in-out 2;
+}
+
+@keyframes blink{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.15)}
+  100%{transform:scale(1)}
+}
+
+.footer{display:flex;justify-content:space-between;margin-top:16px}
+.overlay{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.big-red,.big-q{
+  width:200px;height:200px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:120px;font-weight:900;color:#fff;
+  transform:scale(0);
+  transition:transform .25s cubic-bezier(.2,.9,.3,1);
+}
+.big-red{background:var(--accent)}
+.big-q{background:rgba(0,0,0,.7)}
+.big-visible{transform:scale(1)}
+.result-screen{display:none}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <h1>たしざん</h1>
-    <p class="intro">10もんにちょうせんしよう。1もん10てん、まんてん100てん！</p>
+<div class="app">
+  <h1>たしざん</h1>
 
-    <div class="start-screen">
-      <div class="mode-buttons">
-        <button class="mode" id="mode5">5まで</button>
-        <button class="mode" id="mode10">10まで</button>
-      </div>
-      <div class="small muted">こたえはしたのすうじ（1〜10）からえらんでね。</div>
+  <div class="start-screen">
+    <div class="mode-buttons">
+      <button class="mode" id="mode5">5まで</button>
+      <button class="mode" id="mode10">10まで</button>
     </div>
-
-    <div class="game-area" id="gameArea">
-      <div class="progress" id="progress">もんだい 1 / 10</div>
-      <div class="question-box" id="questionBox">0 + 0 = ?</div>
-      <div class="answers" id="answers"></div>
-      <div class="footer">
-        <div class="score" id="score">すこあ: 0</div>
-        <div class="controls"><button id="skipBtn">つぎへ</button></div>
-      </div>
-    </div>
-
-    <div class="result-screen" id="resultScreen">
-      <h2 id="finalText">おわり！</h2>
-      <p id="finalScore" style="font-size:22px;font-weight:700">0 / 100</p>
-      <div style="margin-top:14px">
-        <button id="restartBtn">もういちど</button>
-      </div>
-    </div>
-
-    <audio id="correctSound" src="sounds/correct.mp3" preload="auto"></audio>
   </div>
 
-  <div class="overlay" aria-hidden="true">
-    <div class="big-red" id="bigRed">○</div>
-    <div class="big-q" id="bigQ">？</div>
+  <div class="game-area" id="gameArea">
+    <div id="progress">もんだい 1 / 10</div>
+    <div class="question-box" id="questionBox"></div>
+    <div class="answers" id="answers"></div>
+    <div class="footer">
+      <div id="score">すこあ: 0</div>
+    </div>
   </div>
 
-  <script>
-    (function(){
-      const mode5 = document.getElementById('mode5');
-      const mode10 = document.getElementById('mode10');
-      const gameArea = document.getElementById('gameArea');
-      const questionBox = document.getElementById('questionBox');
-      const answers = document.getElementById('answers');
-      const progress = document.getElementById('progress');
-      const scoreEl = document.getElementById('score');
-      const skipBtn = document.getElementById('skipBtn');
-      const resultScreen = document.getElementById('resultScreen');
-      const finalText = document.getElementById('finalText');
-      const finalScore = document.getElementById('finalScore');
-      const restartBtn = document.getElementById('restartBtn');
-      const correctSound = document.getElementById('correctSound');
-      const bigRed = document.getElementById('bigRed');
-      const bigQ = document.getElementById('bigQ');
+  <div class="result-screen" id="resultScreen">
+    <h2>おわり！</h2>
+    <p id="finalScore"></p>
+    <button id="restartBtn">もういちど</button>
+  </div>
 
-      let maxSum = 5;
-      let problems = [];
-      let current = 0;
-      let totalScore = 0;
-      let answered = false;
+  <audio id="correctSound" src="sounds/correct.mp3"></audio>
+</div>
 
-      function pickProblems(max){
-        const list = [];
-        let last = null;
-        while(list.length < 10){
-          const s = Math.floor(Math.random()*max) + 1; // 1..max
-          const a = Math.floor(Math.random()*(s)) + 1; // 1..s
-          const b = s - a;
-          if(b === 0) continue; // 0をふせぐ
-          const key = a + '+' + b;
-          if(key === last) continue;
-          list.push({a,b,sum:s});
-          last = key;
-        }
-        return list;
+<div class="overlay">
+  <div class="big-red" id="bigRed">○</div>
+  <div class="big-q" id="bigQ">？</div>
+</div>
+
+<script>
+(() => {
+  const mode5 = document.getElementById('mode5');
+  const mode10 = document.getElementById('mode10');
+  const gameArea = document.getElementById('gameArea');
+  const questionBox = document.getElementById('questionBox');
+  const answers = document.getElementById('answers');
+  const progress = document.getElementById('progress');
+  const scoreEl = document.getElementById('score');
+  const resultScreen = document.getElementById('resultScreen');
+  const finalScore = document.getElementById('finalScore');
+  const restartBtn = document.getElementById('restartBtn');
+  const correctSound = document.getElementById('correctSound');
+  const bigRed = document.getElementById('bigRed');
+  const bigQ = document.getElementById('bigQ');
+
+  let problems = [];
+  let current = 0;
+  let totalScore = 0;
+  let hasMistake = false; // この問題で一度でも間違えたか
+
+  function pickProblems(max){
+    const list=[];
+    while(list.length<10){
+      const sum=Math.floor(Math.random()*max)+1;
+      const a=Math.floor(Math.random()*(sum-1))+1;
+      list.push({a,b:sum-a,sum});
+    }
+    return list;
+  }
+
+  function startGame(max){
+    problems=pickProblems(max);
+    current=0;
+    totalScore=0;
+    document.querySelector('.start-screen').style.display='none';
+    resultScreen.style.display='none';
+    gameArea.style.display='block';
+    updateHUD();
+    showProblem();
+  }
+
+  function updateHUD(){
+    progress.textContent=`もんだい ${current+1} / 10`;
+    scoreEl.textContent=`すこあ: ${totalScore}`;
+  }
+
+  function showProblem(){
+    const p=problems[current];
+    hasMistake=false; // リセット
+    questionBox.textContent=`${p.a} + ${p.b} = ?`;
+    answers.innerHTML='';
+    for(let i=1;i<=10;i++){
+      const b=document.createElement('button');
+      b.textContent=i;
+      b.dataset.val=i;
+      b.onclick=onAnswer;
+      answers.appendChild(b);
+    }
+  }
+
+  function onAnswer(e){
+    const val=Number(e.currentTarget.dataset.val);
+    const p=problems[current];
+
+    if(val===p.sum){
+      if(!hasMistake){
+        totalScore+=10; // 一発正解のみ加点
       }
+      disableAll();
+      updateHUD();
+      showBigRed();
+      correctSound.currentTime=0;
+      correctSound.play().catch(()=>{});
+    }else{
+      hasMistake=true;
+      highlightCorrect(p.sum);
+      showBigQ();
+    }
+  }
 
-      function startGame(max){
-        maxSum = max;
-        problems = pickProblems(max);
-        current = 0; totalScore = 0; answered = false;
-        document.querySelector('.start-screen').style.display='none';
-        resultScreen.style.display='none';
-        gameArea.style.display='block';
-        updateHUD();
-        showProblem();
-      }
+  function highlightCorrect(correct){
+    const btn=answers.querySelector(`button[data-val="${correct}"]`);
+    if(!btn) return;
+    btn.classList.remove('correct-hint');
+    void btn.offsetWidth; // 再点滅用
+    btn.classList.add('correct-hint');
+  }
 
-      function updateHUD(){
-        progress.textContent = `もんだい ${current+1} / 10`;
-        scoreEl.textContent = `すこあ: ${totalScore}`;
-      }
+  function disableAll(){
+    [...answers.children].forEach(b=>b.disabled=true);
+  }
 
-      function showProblem(){
-        const p = problems[current];
-        questionBox.textContent = `${p.a} + ${p.b} = ?`;
-        answers.innerHTML = '';
-        for(let i=1;i<=10;i++){
-          const btn = document.createElement('button');
-          btn.textContent = i;
-          btn.dataset.val = i;
-          btn.addEventListener('click', onAnswer);
-          answers.appendChild(btn);
-        }
-        answered = false;
-      }
+  function showBigRed(){
+    bigRed.classList.add('big-visible');
+    setTimeout(()=>{
+      bigRed.classList.remove('big-visible');
+      next();
+    },700);
+  }
 
-      function onAnswer(e){
-        if(answered) return;
-        answered = true;
-        const val = Number(e.currentTarget.dataset.val);
-        const p = problems[current];
-        Array.from(answers.querySelectorAll('button')).forEach(b=>b.disabled=true);
-        if(val === p.sum){
-          totalScore += 10;
-          showBigRed();
-          playCorrectSound();
-        } else {
-          showBigQ();
-        }
-        updateHUD();
-      }
+  function showBigQ(){
+    bigQ.classList.add('big-visible');
+    setTimeout(()=>bigQ.classList.remove('big-visible'),400);
+  }
 
-      function playCorrectSound(){
-        if(correctSound && typeof correctSound.play === 'function'){
-          correctSound.currentTime = 0; correctSound.play().catch(()=>{});
-        }
-      }
+  function next(){
+    current++;
+    if(current>=10){
+      gameArea.style.display='none';
+      resultScreen.style.display='block';
+      finalScore.textContent=`${totalScore} / 100`;
+      return;
+    }
+    updateHUD();
+    showProblem();
+  }
 
-      function showBigRed(){
-        bigRed.classList.add('big-visible');
-        setTimeout(()=>{ bigRed.classList.remove('big-visible'); advance(); }, 700);
-      }
-      function showBigQ(){
-        bigQ.classList.add('big-visible');
-        setTimeout(()=>{ bigQ.classList.remove('big-visible'); advance(); }, 700);
-      }
-
-      function advance(){
-        current++;
-        if(current >= problems.length){
-          endGame();
-          return;
-        }
-        updateHUD();
-        showProblem();
-      }
-
-      function endGame(){
-        gameArea.style.display='none';
-        resultScreen.style.display='block';
-        finalText.textContent = 'がんばりました＾＾！';
-        finalScore.textContent = `${totalScore} / 100`;
-      }
-
-      mode5.addEventListener('click', ()=>startGame(5));
-      mode10.addEventListener('click', ()=>startGame(10));
-      skipBtn.addEventListener('click', ()=>{
-        if(!answered){
-          answered = true;
-          Array.from(answers.querySelectorAll('button')).forEach(b=>b.disabled=true);
-          showBigQ();
-        }
-      });
-      restartBtn.addEventListener('click', ()=>{
-        document.querySelector('.start-screen').style.display='block';
-        resultScreen.style.display='none';
-      });
-
-      window.addEventListener('keydown', (ev)=>{
-        if(gameArea.style.display==='block' && !answered){
-          const k = ev.key;
-          let v = null;
-          if(k === '0') v = 10;
-          if(/^[1-9]$/.test(k)) v = Number(k);
-          if(v){
-            const btn = answers.querySelector(`button[data-val='${v}']`);
-            if(btn) btn.click();
-          }
-        }
-      });
-
-    })();
-  </script>
+  mode5.onclick=()=>startGame(5);
+  mode10.onclick=()=>startGame(10);
+  restartBtn.onclick=()=>location.reload();
+})();
+</script>
 </body>
 </html>
