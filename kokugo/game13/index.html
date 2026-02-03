@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ビジョントレーニング</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  margin: 0;
+  overflow: hidden;
+}
+
+#menu, #game {
+  display: none;
+}
+
+#menu.active, #game.active {
+  display: block;
+}
+
+button {
+  font-size: 1.4em;
+  margin: 10px;
+  padding: 10px 20px;
+}
+
+.moving-text {
+  position: absolute;
+  font-size: 2.7em;
+  animation-duration: 10s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  white-space: nowrap;
+}
+
+#next-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 1.2em;
+}
+</style>
+</head>
+
+<body>
+
+<!-- メニュー -->
+<div id="menu" class="active">
+  <p>もじをえらんでね</p>
+  <button onclick="startGame('3')">３もじ</button>
+  <button onclick="startGame('4')">４もじ</button>
+  <button onclick="startGame('5')">５もじ</button>
+  <button onclick="startGame('many')">たくさん</button>
+</div>
+
+<!-- ゲーム -->
+<div id="game">
+  <button id="next-btn">つぎへ</button>
+</div>
+
+<script>
+const words = {
+  "3": ["とけい","かえる","りんご","ごりら","うさぎ","たぬき","まいく","うちわ","うきわ","つみき","たいや","みかん","めろん","きのこ","くるま","きりん","さかな","いるか","はさみ","つくえ","きつね","あいす","すいか","ひよこ"],
+  "4": ["らいおん","ぺんぎん","たまねぎ","ひまわり","むらさき","にんじん","しまうま","さいころ","えんぴつ","おにぎり","にわとり","だいこん","きゅうり","かまきり","ぶらんこ","はぶらし"],
+  "5": ["かめれおん","おやこどん","ちゅうしゃ","せんぷうき","ひゃくえん","かたつむり","かぶとむし","ゆきだるま","らんどせる","たんばりん","おにがしま","ももたろう","ひなまつり","びょういん"],
+  "many": ["きゅうきゅうしゃ","しょうぼうしゃ","あんぱんまん","しょくぱんまん","ぎゅうにゅう","がそりんすたんど","うらしまたろう","えきしょうてれび","じゆうがおか","きんきゅうしゃりょう","じんべいざめ","たいいくそうこ","さんぱつやさん","こうそくどうろ","とらんぽりん","さんすうぷりんと","でんわばんごう"]
+};
+
+let currentWords = [];
+let questionCount = 0;
+
+/* 配列シャッフル */
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function startGame(type) {
+  currentWords = shuffle([...words[type]]);
+  questionCount = 0;
+
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("game").classList.add("active");
+
+  nextQuestion();
+}
+
+document.getElementById("next-btn").onclick = nextQuestion;
+
+function nextQuestion() {
+  const game = document.getElementById("game");
+  game.innerHTML = '<button id="next-btn">つぎへ</button>';
+  document.getElementById("next-btn").onclick = nextQuestion;
+
+  if (questionCount >= 3) {
+    game.classList.remove("active");
+    document.getElementById("menu").classList.add("active");
+    return;
+  }
+
+  questionCount++;
+
+  const word = currentWords.shift(); // ← 重複しない
+  const chars = [...word];
+
+  const used = [];
+  const style = document.createElement("style");
+  document.head.appendChild(style);
+
+  chars.forEach((char, i) => {
+    let x, y, ok;
+    do {
+      ok = true;
+      x = Math.random() * 80;
+      y = Math.random() * 80;
+      for (const p of used) {
+        if (Math.abs(p.x - x) < 10 && Math.abs(p.y - y) < 10) ok = false;
+      }
+    } while (!ok);
+
+    used.push({x, y});
+
+    const span = document.createElement("span");
+    span.className = "moving-text";
+    span.textContent = char;
+    span.style.animationName = `move${i}`;
+    game.appendChild(span);
+
+    const x2 = Math.min(80, Math.max(0, x + (Math.random() * 20 - 10)));
+    const y2 = Math.min(80, Math.max(0, y + (Math.random() * 20 - 10)));
+
+    style.innerHTML += `
+      @keyframes move${i} {
+        0% { transform: translate(${x}vw, ${y}vh); }
+        100% { transform: translate(${x2}vw, ${y2}vh); }
+      }
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
